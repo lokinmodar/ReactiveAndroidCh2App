@@ -4,9 +4,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
+import io.reactivex.BackpressureStrategy;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,6 +49,20 @@ public class MainActivity extends AppCompatActivity {
                 .doFinally(() -> log("doFinally"))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(e -> log("subscribe", e));
+
+
+        PublishSubject<Integer> observable = PublishSubject.create();
+        observable.toFlowable(BackpressureStrategy.MISSING)
+                .observeOn(Schedulers.computation())
+                .subscribe(v -> log("s", v.toString()), this::logx);
+        for (int i = 0; i < 1000000; i++) {
+            observable.onNext(i);
+        }
+
+    }
+
+    private void logx(Throwable throwable) {
+        Log.e("APP", "Error", throwable);
     }
 
     private void log(String stage, String item) {
